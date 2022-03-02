@@ -43,7 +43,7 @@ class SciHub(object):
         if self.scihub_url[-3:] == "red":
             self.scihub_url = self.scihub_url.replace('red', 'tw')
 
-    def download(self, choose_scihub_url_index=-1):
+    def download(self, choose_scihub_url_index=-1, filename = ''):
         """Download the pdf of self.doi to the self.out path.
         
         params:
@@ -90,7 +90,7 @@ class SciHub(object):
         else:
             pdf = self.find_pdf_in_html(res.text)
 
-        self.download_pdf(pdf)
+        self.download_pdf(pdf, filename)
         # try:
         #     pdf = self.find_pdf_in_html(res.text)
         #     self.download_pdf(pdf)
@@ -111,7 +111,6 @@ class SciHub(object):
         """
         pdf = {}
         soup = BeautifulSoup(html, 'html.parser')
-        
         pdf_url = soup.find('embed', {'id': 'pdf'}).attrs['src'].split('#')[0]
         pdf['pdf_url'] = pdf_url.replace('https', 'http') if 'http' in pdf_url else 'http:' + pdf_url
 
@@ -134,7 +133,7 @@ class SciHub(object):
         new_title = re.sub(rstr, " ", title)[:200]
         return new_title
 
-    def download_pdf(self, pdf):
+    def download_pdf(self, pdf, filename = ''):
         """Download the pdf by given a pdf dict.
 
         params:
@@ -167,7 +166,7 @@ class SciHub(object):
             res = self.sess.get(pdf['pdf_url'], stream=True)
             retry_times += 1
         tot_size = int(res.headers['Content-Length']) if 'Content-Length' in res.headers else 0
-        out_file_path = os.path.join(self.out, pdf['title']+'.pdf')
+        out_file_path = os.path.join(self.out, filename if filename else (pdf['title']+'.pdf'))
         downl_size = 0
         with open(out_file_path, 'wb') as f:
             for data in res.iter_content(chunk_size=1024, decode_unicode=False):
